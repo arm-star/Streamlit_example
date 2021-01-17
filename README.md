@@ -1,8 +1,5 @@
 # Streamlit_example
 
-
-
-
 Create new repo with venv and istall dependences.
 
 # To start the program
