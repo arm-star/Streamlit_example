@@ -13,87 +13,90 @@ if uploaded_file is not None:
     st.write(df_raw)
     st.write(f'Shape of te initial data = {df_raw.shape}')
 
-# input target column and date column
-st.write('<style>div.Widget.row-widget.stRadio > div{flex-direction:row;}</style>', unsafe_allow_html=True)
-target_column = st.radio("Select TARGET column, can NOT be Time", df_raw.columns)
-the_date_column = st.radio("Select DATE column", df_raw.columns)
+try:
+    # input target column and date column
+    st.write('<style>div.Widget.row-widget.stRadio > div{flex-direction:row;}</style>', unsafe_allow_html=True)
+    target_column = st.radio("Select TARGET column, can NOT be Time", df_raw.columns)
+    the_date_column = st.radio("Select DATE column", df_raw.columns)
 
-# Plot!
-st.plotly_chart(plotly_go_figure(df_raw[the_date_column],
-                                 df_raw[target_column],
-                                 the_date_column,
-                                 target_column),
-                use_container_width=True)
+    # Plot!
+    st.plotly_chart(plotly_go_figure(df_raw[the_date_column],
+                                     df_raw[target_column],
+                                     the_date_column,
+                                     target_column),
+                    se_container_width=True)
 
-#### Make time, target columns
-target_duplicate = target_column+'_copy'
-date_datetime_format = 'timestamp'
-the_date_duplicate = date_datetime_format+'_copy'
+    #### Make time, target columns
+    target_duplicate = target_column+'_copy'
+    date_datetime_format = 'timestamp'
+    the_date_duplicate = date_datetime_format+'_copy'
 
-df = df_raw.copy()
-df[date_datetime_format] = pd.to_datetime(df[the_date_column])      # unix time to datetime
-df = df.sort_values(by=date_datetime_format, ascending=True)        # sort values by date
+    df = df_raw.copy()
+    df[date_datetime_format] = pd.to_datetime(df[the_date_column])      # unix time to datetime
+    df = df.sort_values(by=date_datetime_format, ascending=True)        # sort values by date
 
-#### Cut time window
-st.write('Select START and END dates ')
-day_start = '2017-6-1'
-day_end = '2020-12-31'
-day_start = st.text_input("day_start", day_start)
-day_end = st.text_input("day_end", day_end)
-mask = (df[date_datetime_format] > day_start) & (df[date_datetime_format] <= day_end)
-df = df.loc[mask].reset_index(drop=True)
-df.index = df[date_datetime_format] # set the index to time
-st.write(f'Shape of initial data {df.shape}, \n data range was cutted to: start_date={day_start}  end_date={day_end}')
+    #### Cut time window
+    st.write('Select START and END dates ')
+    day_start = '2017-6-1'
+    day_end = '2020-12-31'
+    day_start = st.text_input("day_start", day_start)
+    day_end = st.text_input("day_end", day_end)
+    mask = (df[date_datetime_format] > day_start) & (df[date_datetime_format] <= day_end)
+    df = df.loc[mask].reset_index(drop=True)
+    df.index = df[date_datetime_format] # set the index to time
+    st.write(f'Shape of initial data {df.shape}, \n data range was cutted to: start_date={day_start}  end_date={day_end}')
 
-#### use visualizer to plot some info about the data
-vis_cor_heatmap(df)
-vis_group_by(df)
+    #### use visualizer to plot some info about the data
+    vis_cor_heatmap(df)
+    vis_group_by(df)
 
-#### check if missing values exist in target column and remove
-st.write('Check if missing values exist in target column and remove')
-df_clean = remove_missing_values(df, col_name=target_column)
+    #### check if missing values exist in target column and remove
+    st.write('Check if missing values exist in target column and remove')
+    df_clean = remove_missing_values(df, col_name=target_column)
 
-# duplicate target column and timestamp
-df_clean[target_duplicate] = df_clean[target_column]
-df_clean[the_date_duplicate] = df_clean[date_datetime_format]
+    # duplicate target column and timestamp
+    df_clean[target_duplicate] = df_clean[target_column]
+    df_clean[the_date_duplicate] = df_clean[date_datetime_format]
 
-df_clean[date_datetime_format] = df_clean[date_datetime_format].shift(-1)
-df_clean['time_diff'] = df_clean[date_datetime_format]-df_clean[the_date_duplicate]
+    df_clean[date_datetime_format] = df_clean[date_datetime_format].shift(-1)
+    df_clean['time_diff'] = df_clean[date_datetime_format]-df_clean[the_date_duplicate]
 
-# drop not necessary columns
-keep_columns_list = [target_column, date_datetime_format, target_duplicate]
-df_clean = df_clean.filter(keep_columns_list)
+    # drop not necessary columns
+    keep_columns_list = [target_column, date_datetime_format, target_duplicate]
+    df_clean = df_clean.filter(keep_columns_list)
 
-# Data Preparation
-st.header('Data Preparation')
+    # Data Preparation
+    st.header('Data Preparation')
 
-# Shift by one hour / one time unit
-df_shift = df_clean.copy()
-df_shift[target_column] = df_shift[target_column].shift(-1)
+    # Shift by one hour / one time unit
+    df_shift = df_clean.copy()
+    df_shift[target_column] = df_shift[target_column].shift(-1)
 
-# Create data for algorithm
-df_data = df_shift.iloc[:-2]
-df_data = feature_engin_lightgbm(df_data, date_datetime_format) # Future Engineering
+    # Create data for algorithm
+    df_data = df_shift.iloc[:-2]
+    df_data = feature_engin_lightgbm(df_data, date_datetime_format) # Future Engineering
 
-X = df_data.drop([target_column, date_datetime_format], axis=1)
-y_0 = df_data[target_column]
+    X = df_data.drop([target_column, date_datetime_format], axis=1)
+    y_0 = df_data[target_column]
 
-# Split Train/test sets
-st.header('Train/Test split')
-X_train, X_test, y_train, y_test = train_test_split(X, y_0, test_size=(st.number_input('test_size (%)', 20))/100,
-                                                    random_state=st.number_input('random_state', 42),
-                                                    shuffle=False)
+    # Split Train/test sets
+    st.header('Train/Test split')
+    X_train, X_test, y_train, y_test = train_test_split(X, y_0, test_size=(st.number_input('test_size (%)', 20))/100,
+                                                        random_state=st.number_input('random_state', 42),
+                                                        shuffle=False)
 
-st.write(f'\nX_train {X_train.shape}, \ny_train {y_train.shape}, \nX_test {X_test.shape}, \ny_test {y_test.shape}' )
+    st.write(f'\nX_train {X_train.shape}, \ny_train {y_train.shape}, \nX_test {X_test.shape}, \ny_test {y_test.shape}' )
 
 
-Next_N_Points = st.number_input('Predict for the Next N Points', 14)
+    Next_N_Points = st.number_input('Predict for the Next N Points', 14)
+except:
+    st.write('Please upload a csv file')
 
-st.header('Starting the LightGBM_model' )
+st.header('Starting the LightGBM_model')
 if st.button('Start LightGBM and predict Test Set'):
     scores, model = LightGBM_model(X_train, y_train)
 
-    st.write('scores', scores)
+    st.write('cross_val_scores', scores)
     st.write('model', model)
 
     predictions_testset = cross_val_predict(model, X_test, y_test, cv=5)
