@@ -16,7 +16,7 @@ def LightGBM_model(X, y):
     gsc = GridSearchCV(
         estimator=lgb.LGBMRegressor(),
         param_grid={
-            'n_estimators': [1, 10, 20, 40, 100],
+            'n_estimtaer': [1, 10, 20, 40, 100],
             'learning_rate': [0.01, 0.05, 0.1, 0.15, 0.2],
             'boosting_type': ['gbdt'],
             'max_depth': [1, 10, 20, 30, 40, 60, 200],
