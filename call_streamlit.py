@@ -3,10 +3,7 @@ from utils.visualizer_stramlit import *
 from utils.preprocessing import *
 from utils.model_engine import *
 
-
-
-st.markdown("## Time series prediction XRP!")
-
+st.markdown("## Streamlit example using LightGBM XRP!")
 
 #### Importing data
 uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
@@ -16,22 +13,17 @@ if uploaded_file is not None:
     st.write(df_raw)
     st.write(f'Shape of te initial data = {df_raw.shape}')
 
-
 # input target column and date column
 st.write('<style>div.Widget.row-widget.stRadio > div{flex-direction:row;}</style>', unsafe_allow_html=True)
-target_column = st.radio("Select TARGET column", df_raw.columns)
-#df_chart = pd.DataFrame({target_column: df_raw[target_column]})
-#st.line_chart(df_chart)
-
-
+target_column = st.radio("Select TARGET column, can NOT be Time", df_raw.columns)
 the_date_column = st.radio("Select DATE column", df_raw.columns)
+
 # Plot!
 st.plotly_chart(plotly_go_figure(df_raw[the_date_column],
                                  df_raw[target_column],
                                  the_date_column,
                                  target_column),
                 use_container_width=True)
-
 
 #### Make time, target columns
 target_duplicate = target_column+'_copy'
@@ -58,7 +50,7 @@ vis_cor_heatmap(df)
 vis_group_by(df)
 
 #### check if missing values exist in target column and remove
-st.write('check if missing values exist in target column and remove')
+st.write('Check if missing values exist in target column and remove')
 df_clean = remove_missing_values(df, col_name=target_column)
 
 # duplicate target column and timestamp
@@ -68,21 +60,14 @@ df_clean[the_date_duplicate] = df_clean[date_datetime_format]
 df_clean[date_datetime_format] = df_clean[date_datetime_format].shift(-1)
 df_clean['time_diff'] = df_clean[date_datetime_format]-df_clean[the_date_duplicate]
 
-# Make sure data is all shifted by 1h or 1 unit.
-#print(df_clean.shape)
-#df_clean = df_clean[df_clean['time_diff'] == pd.Timedelta('0 days 1 hours')].reset_index(drop=True)
-#print(df_clean.shape)
-
 # drop not necessary columns
-#df_clean = df_clean.drop([the_date_duplicate, the_date_column, 'time_diff', 'High', 'Adj Close', 'Low', 'Close', 'Volume' ], axis=1)
 keep_columns_list = [target_column, date_datetime_format, target_duplicate]
 df_clean = df_clean.filter(keep_columns_list)
 
-
-
 # Data Preparation
 st.header('Data Preparation')
-# Shift by one hour
+
+# Shift by one hour / one time unit
 df_shift = df_clean.copy()
 df_shift[target_column] = df_shift[target_column].shift(-1)
 
@@ -93,7 +78,7 @@ df_data = feature_engin_lightgbm(df_data, date_datetime_format) # Future Enginee
 X = df_data.drop([target_column, date_datetime_format], axis=1)
 y_0 = df_data[target_column]
 
-# Train/test sets
+# Split Train/test sets
 st.header('Train/Test split')
 X_train, X_test, y_train, y_test = train_test_split(X, y_0, test_size=(st.number_input('test_size (%)', 20))/100,
                                                     random_state=st.number_input('random_state', 42),
@@ -106,7 +91,6 @@ Next_N_Points = st.number_input('Predict for the Next N Points', 14)
 
 st.header('Starting the LightGBM_model' )
 if st.button('Start LightGBM and predict Test Set'):
-    #scores, model = LightGBM_model(X, y_0)
     scores, model = LightGBM_model(X_train, y_train)
 
     st.write('scores', scores)
@@ -140,8 +124,7 @@ if st.button('Start LightGBM and predict Test Set'):
         y='Value',
     ))
 
-
-    # Prediction for the next hour: LightGBM
+    # Prediction for the next hour / nex time point: LightGBM
     st.header('Prediction for TODAY')
     model_h = model.fit(X, y_0)
     df_single = df_shift.copy()
@@ -158,7 +141,7 @@ if st.button('Start LightGBM and predict Test Set'):
 
 
     # Prediction for the next hour: LightGBM
-    st.header('Prediction for TOMORROW')
+    st.header('Prediction for TOMORROW / next time point')
 
     df_single = df_shift.copy()
     df_single.timestamp[-1:] = df_single.timestamp[-2:-1]+timedelta(days=1)
@@ -215,43 +198,5 @@ if st.button('Start LightGBM and predict Test Set'):
                                      target_column),
                     use_container_width=True)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#my_bar = st.progress(0)
-#my_bar.progress(50)
-
-#values = st.sidebar.slider(target_column + ' range', float(df.[target_column].min()), 1000., (50., 300.))
-#f = px.histogram(df.query(f'{target_column}.between{values}'), x=target_column, nbins=15, title=target_column + ' distribution')
-#f.update_xaxes(title=target_column)
-#f.update_yaxes(title='No. of listings')
-#st.plotly_chart(f)
-
-#chart_data = pd.DataFrame(np.random.randn(20, 3),columns=['a', 'b', 'c'])
-#st.line_chart(chart_data)
-
-#x = st.slider('Select a value')
-#st.write(x, 'squared is', x * x)
 
 st.write('END')

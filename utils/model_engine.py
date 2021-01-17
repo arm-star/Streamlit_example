@@ -5,9 +5,9 @@ from definitions import *
 def LightGBM_model(X, y):
     """
     Build LightGBM engine
-    :param X:
-    :param y:
-    :return:
+    :param X: X
+    :param y: y
+    :return: scores , model
     """
     my_bar = st.progress(0)
     my_bar.progress(1)
@@ -45,10 +45,10 @@ def LightGBM_model(X, y):
 def model_metrics(xx, yy, model_name):
     """
     custom function prints model evaluation parameters FIX ME
-    :param xx:
-    :param yy:
-    :param model_name:
-    :return:
+    :param xx: xx
+    :param yy: yy
+    :param model_name: model_name
+    :return: metrics
     """
     st.write('\nEvaluate results ' + model_name)
     st.write('Mean Absolute Error:', metrics.mean_absolute_error(xx, yy))

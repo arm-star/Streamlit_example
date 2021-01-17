@@ -6,7 +6,7 @@ def remove_missing_values(df, col_name):
     Returnes data frmae where all lines are removed checked by column if missing values exist
     :param df:
     :param col_name:
-    :return:  data frmae
+    :return:  data frame
     """
 
     df_clean = df.copy()
@@ -36,9 +36,8 @@ def feature_engin_lightgbm(df, date_datetime_format):
     """
     create new datetime column
     :param df:
-    :return:
+    :return:df
     """
-
 
     df['year'] = df[date_datetime_format].dt.year.astype('category')
     df['month'] = df[date_datetime_format].dt.month.astype('category')
@@ -49,5 +48,3 @@ def feature_engin_lightgbm(df, date_datetime_format):
     ddf = df.copy()
     print(ddf.shape)
     return ddf
-
-
